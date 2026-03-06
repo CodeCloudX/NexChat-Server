@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexChat Ultra Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Firebase SDKs (Compat version for easier testing) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        .active-chat { background-color: #f3f4f6; border-left: 4px solid #4f46e5; }
+        #messages::-webkit-scrollbar { width: 6px; }
+        #messages::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 10px; }
+        .modal { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white p-3 flex justify-between items-center shadow-lg z-10">
+        <div class="flex items-center space-x-2 cursor-pointer" onclick="showProfileModal('me')">
+            <div id="nav-my-avatar" class="w-8 h-8 rounded-full bg-indigo-400 flex items-center justify-center font-bold overflow-hidden border-2 border-white">?</div>
+            <h1 class="text-lg font-bold tracking-tight">NexChat</h1>
+        </div>
+        <div id="user-info" class="hidden flex items-center space-x-4">
+            <div class="flex flex-col items-end">
+                <span id="me-name" class="font-medium"></span>
+                <span class="text-[10px] text-indigo-200">YOU (Online)</span>
+            </div>
+            <button onclick="logout()" class="bg-indigo-500 hover:bg-red-500 transition-colors px-3 py-1 rounded-md text-sm">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Auth Section -->
+    <div id="auth-section" class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+            <div id="login-form">
+                <h2 class="text-3xl mb-2 font-extrabold text-gray-800 text-center text-indigo-600">NexChat</h2>
+                <p class="text-center text-gray-500 mb-6 text-sm">Sign in or create account</p>
+
+                <div class="space-y-4">
+                    <input id="email" type="email" placeholder="Email Address" class="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+
+                    <div id="otp-container" class="hidden">
+                        <input id="otp" type="text" placeholder="6-digit OTP" class="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl tracking-widest font-bold">
+                    </div>
+
+                    <button id="request-otp-btn" onclick="requestOTP()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all">Send OTP</button>
+                    <button id="verify-otp-btn" onclick="verifyOTP()" class="hidden w-full bg-indigo-600 text-white p-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all">Verify & Login</button>
+
+                    <div class="relative flex items-center py-2">
+                        <div class="flex-grow border-t border-gray-200"></div>
+                        <span class="flex-shrink mx-4 text-gray-400 text-xs">OR</span>
+                        <div class="flex-grow border-t border-gray-200"></div>
+                    </div>
+
+                    <button onclick="googleLogin()" class="w-full flex items-center justify-center space-x-2 border border-gray-300 p-3 rounded-xl font-medium hover:bg-gray-50 transition-all text-gray-700">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
+                        <span>Continue with Google</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Setup Section (WhatsApp style) -->
+    <div id="setup-section" class="hidden flex-1 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Profile Info</h2>
+            <p class="text-sm text-gray-500 mb-6">Please provide your name and an optional photo</p>
+
+            <div class="flex flex-col items-center space-y-6">
+                <div class="relative group">
+                    <div id="setup-avatar-preview" class="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-600 border-4 border-indigo-50 overflow-hidden">
+                        ?
+                    </div>
+                    <label class="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                        📷 <input type="file" id="setup-photo-input" class="hidden" accept="image/*" onchange="previewSetupPhoto(this)">
+                    </label>
+                </div>
+
+                <div class="w-full text-left">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Full Name</label>
+                    <input id="setup-name" type="text" placeholder="Display Name" class="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium mt-1">
+                </div>
+
+                <div class="flex w-full space-x-3">
+                    <button onclick="skipSetup()" class="flex-1 border border-gray-200 p-3 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-all">Skip</button>
+                    <button onclick="saveSetup()" class="flex-1 bg-indigo-600 text-white p-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="main-app" class="hidden flex-1 flex overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 space-y-2 border-b">
+                <div class="relative">
+                    <input id="search-email" type="text" placeholder="Search people..." class="w-full bg-gray-100 border-none p-3 pl-10 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" oninput="debouncedSearch()">
+                    <span class="absolute left-3 top-3 text-gray-400">🔍</span>
+                </div>
+            </div>
+            <div id="search-results-container" class="hidden px-4 py-2 border-b border-indigo-50 bg-indigo-50">
+                <div id="search-results-list" class="space-y-2 mb-2"></div>
+            </div>
+            <div class="px-4 py-2 border-b border-gray-50 bg-gray-50 text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Chats</div>
+            <div id="chat-list" class="flex-1 overflow-y-auto"></div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chat-window" class="flex-1 flex flex-col bg-[#e5ddd5] relative">
+            <div id="no-chat-selected" class="absolute inset-0 z-20 bg-gray-50 flex flex-col items-center justify-center text-center p-6">
+                <div class="text-6xl mb-4">💬</div>
+                <h2 class="text-xl font-bold text-gray-700 text-indigo-600">NexChat</h2>
+                <p class="text-gray-500 text-sm mt-2">Start a new conversation</p>
+            </div>
+
+            <!-- Header -->
+            <div class="p-3 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="showProfileModal('me')">
+                    <div id="chat-avatar" class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold uppercase overflow-hidden border">?</div>
+                    <div>
+                        <h3 id="chat-with-name" class="font-bold text-gray-800 leading-tight">Select Contact</h3>
+                        <div class="flex items-center space-x-1">
+                            <span id="chat-status-dot" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                            <span id="chat-with-status" class="text-[10px] text-gray-500 font-bold tracking-tight">OFFLINE</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="chat-actions" class="hidden flex items-center space-x-2">
+                    <button id="block-btn" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-all">🚫</button>
+                    <button id="unblock-btn" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-all">🔓</button>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="messages" class="flex-1 p-4 overflow-y-auto space-y-2 flex flex-col"></div>
+
+            <!-- Input Area -->
+            <div class="p-3 bg-[#f0f2f5] flex items-center space-x-2">
+                <label for="media-input" class="cursor-pointer p-2 hover:bg-gray-200 rounded-full text-gray-500" title="Send Media">
+                    📎
+                    <input type="file" id="media-input" class="hidden" accept="image/*" onchange="sendMediaMessage(this)">
+                </label>
+                <input id="msg-input" type="text" placeholder="Type a message..." class="flex-1 border-none p-3 rounded-xl outline-none text-sm" oninput="sendTypingStatus()">
+                <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-all">
+                    <svg viewBox="0 0 24 24" width="20" height="24" class="fill-current"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="profile-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-indigo-600 p-6 flex flex-col items-center text-white relative">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-white font-bold">✕</button>
+                <div id="p-avatar" class="w-24 h-24 rounded-full bg-white text-indigo-600 flex items-center justify-center text-4xl font-bold border-4 border-indigo-400 overflow-hidden mb-2">?</div>
+                <h3 id="p-name" class="text-xl font-bold">User Name</h3>
+                <span id="p-email" class="text-xs text-indigo-200">email@example.com</span>
+            </div>
+            <div class="p-6 space-y-4">
+                <div id="p-bio-box">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">About</label>
+                    <p id="p-bio" class="text-gray-700 text-sm mt-1">Hey there! I am using NexChat.</p>
+                    <textarea id="p-bio-edit" class="hidden w-full border border-gray-200 p-2 rounded-lg text-sm mt-1"></textarea>
+                </div>
+                <div id="my-profile-actions" class="hidden flex space-y-2 flex-col">
+                    <label class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-colors">
+                        Change Photo <input type="file" class="hidden" accept="image/*" onchange="uploadProfilePhoto(this)">
+                    </label>
+                    <button id="edit-btn" onclick="toggleEditProfile(true)" class="bg-indigo-100 text-indigo-600 py-2 rounded-lg text-xs font-bold hover:bg-indigo-200 transition-colors">Edit Profile</button>
+                    <button id="save-btn" onclick="saveProfile()" class="hidden bg-green-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition-colors">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

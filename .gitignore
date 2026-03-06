@@ -1,0 +1,75 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.bak
+*.swp
+
+# --- Environments ---
+.env
+.env.*
+!.env.example
+
+# --- IDEs (IntelliJ, PyCharm, VSCode) ---
+.idea/
+.vscode/
+*.iml
+*.iws
+out/
+.classpath
+.project
+.settings/
+
+# --- SENSITIVE DATA (CRITICAL) ---
+# Firebase credentials and configuration
+firebase/
+firebase-adminsdk*.json
+firebase-key.json
+service-account.json
+*.json
+!package.json
+!composer.json
+!alembic.json
+
+# SSL Certificates for Database (Supabase/Neon)
+ssl/
+*.crt
+*.pem
+*.key
+*.pub
+
+# --- Database & Cache ---
+*.sqlite3
+*.db
+*.db-journal
+dump.rdb
+.redis_cache
+
+# --- Logs ---
+*.log
+logs/
+uvicorn.log
+gunicorn.log
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Deployment / Distribution ---
+build/
+dist/
+*.egg-info/
+.eggs/
+node_modules/
+
+# --- Migrations ---
+# We keep migrations but ignore any compiled bytecode
+migrations/__pycache__/

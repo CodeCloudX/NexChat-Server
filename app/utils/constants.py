@@ -1,0 +1,33 @@
+# --- PAGINATION ---
+DEFAULT_PAGE_LIMIT = 20
+MAX_PAGE_LIMIT = 100
+
+# --- STORAGE & MEDIA ---
+STORAGE_TYPE_SUPABASE = "supabase"
+STORAGE_UPLOAD_TIMEOUT = 30.0
+PROFILE_PHOTO_MAX_WIDTH = 512
+CHAT_MEDIA_MAX_WIDTH = 1280
+IMAGE_QUALITY = 80
+PROFILE_IMAGE_QUALITY = 75
+
+# --- REDIS CACHE TTLs (in seconds) ---
+PRESENCE_TTL = 120
+CHAT_MEMBERS_CACHE_TTL = 3600
+OTP_TTL = 300  # 5 minutes
+OTP_LENGTH = 6
+OTP_MAX_ATTEMPTS = 3
+OTP_COOLDOWN = 21600  # 6 hours
+
+# --- RATE LIMITS (Requests per Minute) ---
+RATE_LIMIT_AUTH = 10      # High security for Login/Signup
+RATE_LIMIT_DEFAULT = 60   # 1 request per second for general API
+RATE_LIMIT_MESSAGES = 100 # Higher limit for chat messages
+
+# --- WEBSOCKET EVENT TYPES ---
+EVENT_MESSAGE = "message"
+EVENT_MESSAGE_EDIT = "message_edit"
+EVENT_MESSAGE_DELETE = "message_delete"
+EVENT_TYPING = "typing"
+EVENT_PRESENCE = "presence"
+EVENT_READ_RECEIPT = "read_receipt"
+EVENT_STATUS_UPDATE = "message_status_update"
