@@ -49,15 +49,11 @@ class Settings(BaseSettings):
     # S3 Specific (Only needed if STORAGE_TYPE=s3)
     S3_ACCESS_KEY: Optional[str] = None
 
-    # PUSH NOTIFICATIONS
+    # PUSH NOTIFICATIONS / GOOGLE AUTH
     FIREBASE_CREDENTIALS: Optional[str] = None
 
-    # EMAIL SETTINGS (SMTP)
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = 587
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
+    # EMAIL SETTINGS (Brevo API only)
+    BREVO_API_KEY: Optional[str] = None
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = "NexChat"
 
