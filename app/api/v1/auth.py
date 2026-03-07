@@ -24,7 +24,7 @@ async def request_otp(
     Works for both new and existing users (Passwordless).
     """
     await otp_service.generate_otp(otp_in.email)
-    return {"message": "OTP sent to email (check logs in dev)"}
+    return {"message": "OTP sent to email"}
 
 
 @router.post("/otp/verify", response_model=Token)

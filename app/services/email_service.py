@@ -49,100 +49,96 @@ async def send_email(
             return False
 
 async def send_otp_email(email_to: str, otp: str) -> bool:
-    """Sends a professional NexChat branded OTP email."""
-    subject = f"{otp} is your NexChat verification code"
+    """Sends a professional NexChat branded OTP email based on simplified dark theme."""
+    subject = f"NexChat verification code: {otp}"
     
     html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: #000000;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            }}
             .container {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                max-width: 500px;
-                margin: 0 auto;
-                padding: 40px 20px;
-                color: #1f2937;
-                background-color: #f9fafb;
-            }}
-            .card {{
-                background-color: #ffffff;
-                padding: 32px;
+                max-width: 400px;
+                margin: 40px auto;
+                background-color: #121212;
                 border-radius: 16px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                border: 1px solid #222222;
+                padding: 40px 20px;
                 text-align: center;
-            }}
-            .logo {{
-                color: #4f46e5;
-                font-size: 28px;
-                font-weight: 800;
-                margin-bottom: 24px;
-                letter-spacing: -0.025em;
+                color: #ffffff;
             }}
             .title {{
-                font-size: 20px;
-                font-weight: 600;
-                color: #111827;
-                margin-bottom: 8px;
+                font-size: 22px;
+                font-weight: 700;
+                color: #a78bfa;
+                margin-bottom: 24px;
             }}
-            .subtitle {{
+            .instruction {{
                 font-size: 14px;
-                color: #6b7280;
-                margin-bottom: 32px;
+                color: #aaaaaa;
+                line-height: 1.5;
+                margin-bottom: 30px;
             }}
             .otp-box {{
-                background-color: #f3f4f6;
-                padding: 24px;
-                font-size: 36px;
-                font-weight: 700;
-                color: #4f46e5;
-                letter-spacing: 8px;
+                background-color: #1e1e1e;
+                padding: 25px;
                 border-radius: 12px;
-                margin-bottom: 32px;
-                border: 1px solid #e5e7eb;
+                font-size: 40px;
+                font-weight: 700;
+                color: #a78bfa;
+                letter-spacing: 5px;
+                margin-bottom: 30px;
+                display: inline-block;
+                width: 80%;
             }}
             .footer {{
-                margin-top: 32px;
                 font-size: 12px;
-                color: #9ca3af;
-                line-height: 1.5;
+                color: #666666;
+                margin-top: 20px;
             }}
-            .warning {{
-                font-size: 12px;
-                color: #9ca3af;
-                margin-top: 16px;
-                padding-top: 16px;
-                border-top: 1px solid #f3f4f6;
+            .branding {{
+                margin-top: 10px;
+                font-weight: 600;
+                color: #888888;
             }}
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="card">
-                <div class="logo">NexChat</div>
-                <div class="title">Verification Code</div>
-                <div class="subtitle">Please use the following code to sign in to your account.</div>
-                
-                <div class="otp-box">
-                    {otp}
-                </div>
-                
-                <div class="footer">
-                    This code will expire in <strong>5 minutes</strong>.<br>
-                    If you did not request this code, please ignore this email.
-                </div>
-                
-                <div class="warning">
-                    Securely connecting people.<br>
-                    &copy; 2026 NexChat Team.
-                </div>
+            <div class="title">NexChat Verification</div>
+            
+            <div class="instruction">
+                Use the following code to sign in to your account. Valid for 5 minutes.
+            </div>
+            
+            <div class="otp-box">
+                {otp}
+            </div>
+            
+            <div class="footer">
+                If you did not request this code, please ignore this email.
+            </div>
+            
+            <div class="branding">
+                NexChat by CodeCloudX
+            </div>
+            
+            <div style="font-size: 10px; color: #444; margin-top: 20px;">
+                &copy; 2026 NexChat. All rights reserved.
             </div>
         </div>
     </body>
     </html>
     """
     
-    text_content = f"Your NexChat verification code is: {otp}. It expires in 5 minutes."
+    text_content = f"Your NexChat verification code is: {otp}. It expires in 5 minutes. NexChat by CodeCloudX"
 
     return await send_email(email_to, subject, html_content, text_content)
