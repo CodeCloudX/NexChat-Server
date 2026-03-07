@@ -62,7 +62,7 @@ def read_root():
         "docs": f"{settings.API_V1_STR}/docs"
     }
 
-
+@app.head("/health", tags=["system"])
 @app.get("/health", tags=["system"])
 async def health_check():
     """
