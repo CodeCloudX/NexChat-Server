@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, ForeignKey, DateTime, UniqueConstraint, Index
 from sqlalchemy.sql import func
 from app.models.base import Base
 
@@ -13,4 +13,6 @@ class UserBlock(Base):
     # --- PERFORMANCE FIX: Prevents duplicate blocks at DB level ---
     __table_args__ = (
         UniqueConstraint('blocker_id', 'blocked_id', name='_blocker_blocked_uc'),
+        # Combined index for fast block checks
+        Index('idx_blocker_blocked', 'blocker_id', 'blocked_id'),
     )

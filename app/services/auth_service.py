@@ -38,7 +38,7 @@ async def authenticate_google(
 
             # Update profile photo from Google if available
             if photo_url:
-                await user_service.update_user(db, db_obj=user, obj_in={"profile_photo_url": photo_url})
+                await user_service.update_user(db, db_obj=user, obj_in={"profile_photo_url": photo_url}, mark_complete=False)
         
         if not user.is_active:
             raise InactiveUserException()

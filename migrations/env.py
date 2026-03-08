@@ -15,7 +15,7 @@ from app.models.chat_member import ChatMember
 from app.models.message import Message
 from app.models.message_read import MessageRead
 from app.models.user_block import UserBlock
-from app.models.user_device import UserDevice
+from app.models.user_session import UserSession
 from app.core.config import settings
 
 config = context.config
@@ -42,7 +42,7 @@ async def run_migrations_online() -> None:
             connect_args={
                 "prepared_statement_cache_size": 0,
                 "statement_cache_size": 0,
-                "ssl": "require" # Simplified SSL for Supabase compatibility
+                "ssl": "require"
             }
         )
     )

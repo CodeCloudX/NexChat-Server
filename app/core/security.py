@@ -1,22 +1,33 @@
-from datetime import datetime, timedelta, timezone
-from typing import Any, Union
+import secrets
+import hashlib
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user_session import UserSession
 
-from jose import jwt
+def generate_session_id() -> str:
+    """
+    Generates a cryptographically strong session identifier.
+    Uses secrets module for production-grade randomness.
+    """
+    return secrets.token_urlsafe(32)
 
-from app.core.config import settings
+def hash_session_id(session_id: str) -> str:
+    """
+    Optional: Hashes the session ID for storage if you want 
+    extra protection against DB leaks.
+    """
+    return hashlib.sha256(session_id.encode()).hexdigest()
 
-ALGORITHM = "HS256"
-
-
-def create_access_token(
-    subject: Union[str, Any], expires_delta: timedelta = None
-) -> str:
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+async def validate_session_request(
+    db: AsyncSession, 
+    session_id: str, 
+    device_id: str,
+    ip_address: str
+) -> UserSession:
+    """
+    Core security function to trust and validate a session.
+    Multi-layer validation: Session ID, Device ID, and IP monitoring.
+    """
+    # Import inside function to avoid circular dependency with session_repo/service
+    from app.services import session_service
+    return await session_service.verify_session(db, session_id, device_id, ip_address)

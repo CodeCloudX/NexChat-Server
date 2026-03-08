@@ -21,7 +21,7 @@ from app.models.chat_member import ChatMember
 from app.models.message import Message
 from app.models.message_read import MessageRead
 from app.models.user_block import UserBlock
-from app.models.user_device import UserDevice
+from app.models.user_session import UserSession
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

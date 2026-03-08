@@ -12,10 +12,12 @@ async def generate_otp(email: str) -> str:
     Generates an OTP, stores it in Redis, and sends it via email.
     Strictly prevents multiple active OTPs to reduce server load.
     """
-    # 1. Check if user is blocked (6 hours)
+    # 1. Check if user is blocked
     is_blocked = await redis_client.get(f"otp_blocked:{email}")
     if is_blocked:
-        raise NexChatException(status_code=429, detail="Too many attempts. Locked for 6 hours.")
+        # Calculate hours for message from constant
+        block_hours = OTP_COOLDOWN // 3600
+        raise NexChatException(status_code=429, detail=f"Too many attempts. Locked for {block_hours} hours.")
 
     # 2. Check if an active OTP already exists
     existing_otp = await redis_client.get(f"otp:{email}")
@@ -30,19 +32,18 @@ async def generate_otp(email: str) -> str:
     attempts = int(attempts) if attempts else 0
     
     if attempts >= OTP_MAX_ATTEMPTS:
+        block_hours = OTP_COOLDOWN // 3600
         await redis_client.set(f"otp_blocked:{email}", "1", expire=OTP_COOLDOWN)
         await redis_client.delete(f"otp_attempts:{email}")
-        raise NexChatException(status_code=429, detail="Maximum OTP requests reached. Blocked for 6 hours.")
+        raise NexChatException(status_code=429, detail=f"Maximum OTP requests reached. Blocked for {block_hours} hours.")
 
     # 4. Generate and store NEW OTP
     otp = generate_otp_code(OTP_LENGTH)
     await redis_client.set(f"otp:{email}", otp, expire=OTP_TTL)
     
     # 5. Send OTP via Email
-    # Note: We send the email *after* storing in Redis to ensure verification works immediately
     email_sent = await email_service.send_otp_email(email, otp)
     if not email_sent:
-        # If email fails, we might want to log it, but in dev it just prints to console
         logger.warning(f"Failed to send OTP email to {email}")
 
     # 6. Increment attempts

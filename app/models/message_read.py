@@ -8,8 +8,9 @@ class MessageRead(Base):
     """
     __tablename__ = "message_reads"
     
-    message_id = Column(String, ForeignKey("messages.id"), primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), primary_key=True)
+    # Composite Primary Key already ensures uniqueness of (message_id, user_id)
+    message_id = Column(String, ForeignKey("messages.id", ondelete="CASCADE"), primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     
     # Jab message device tak pahunch gaya (Double Gray Tick)
     delivered_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -8,15 +8,14 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "NexChat"
     
-    # Missing fields from .env
+    # Environment
     APP_NAME: Optional[str] = "NexChat"
     ENV: str = "development"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 
     # CORE SETTINGS
-    SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    SECRET_KEY: str # Still used for hashing or internal signatures if needed
     
     # CORS
     CORS_ORIGINS: Union[str, List[str]] = []
@@ -50,7 +49,7 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: Optional[str] = None
 
     # PUSH NOTIFICATIONS / GOOGLE AUTH
-    FIREBASE_CREDENTIALS: Optional[str] = None
+    FIREBASE_CREDENTIALS: Optional[str] = "firebase/service-account.json"
 
     # EMAIL SETTINGS (Brevo API only)
     BREVO_API_KEY: Optional[str] = None

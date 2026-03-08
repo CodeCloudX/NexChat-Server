@@ -13,10 +13,13 @@ PROFILE_IMAGE_QUALITY = 75
 # --- REDIS CACHE TTLs (in seconds) ---
 PRESENCE_TTL = 120
 CHAT_MEMBERS_CACHE_TTL = 3600
+
+# --- AUTH & SESSIONS ---
 OTP_TTL = 300  # 5 minutes
 OTP_LENGTH = 6
 OTP_MAX_ATTEMPTS = 3
 OTP_COOLDOWN = 21600  # 6 hours
+SESSION_EXPIRE_DAYS = 30
 
 # --- RATE LIMITS (Requests per Minute) ---
 RATE_LIMIT_AUTH = 10      # High security for Login/Signup

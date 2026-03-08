@@ -1,16 +1,15 @@
 import logging
-from typing import Optional
 import httpx
 
 from app.core.config import settings
+from app.utils import constants
 
 logger = logging.getLogger(__name__)
 
 async def send_email(
     email_to: str,
     subject: str,
-    html_content: str,
-    text_content: Optional[str] = None
+    html_content: str
 ) -> bool:
     """
     Sends email via Brevo REST API (HTTP). 
@@ -18,7 +17,6 @@ async def send_email(
     """
     if not settings.BREVO_API_KEY:
         logger.warning(f"Skipping email to {email_to} - BREVO_API_KEY missing.")
-        print(f"DEBUG EMAIL to {email_to}: {subject}\nContent: {html_content}")
         return False
 
     url = "https://api.brevo.com/v3/smtp/email"
@@ -33,14 +31,11 @@ async def send_email(
         "subject": subject,
         "htmlContent": html_content,
     }
-    if text_content:
-        data["textContent"] = text_content
 
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(url, headers=headers, json=data)
             if response.status_code <= 201:
-                logger.info(f"Email sent successfully to {email_to} via Brevo")
                 return True
             logger.error(f"Brevo API Error: {response.status_code} - {response.text}")
             return False
@@ -51,6 +46,9 @@ async def send_email(
 async def send_otp_email(email_to: str, otp: str) -> bool:
     """Sends a professional NexChat branded OTP email based on simplified dark theme."""
     subject = f"NexChat verification code: {otp}"
+    
+    # Use constant for expiry display
+    expiry_mins = constants.OTP_TTL // 60
     
     html_content = f"""
     <!DOCTYPE html>
@@ -82,9 +80,9 @@ async def send_otp_email(email_to: str, otp: str) -> bool:
                 margin-bottom: 24px;
             }}
             .instruction {{
-                font-size: 14px;
-                color: #aaaaaa;
-                line-height: 1.5;
+                font-size: 15px;
+                color: #dddddd;
+                line-height: 1.6;
                 margin-bottom: 30px;
             }}
             .otp-box {{
@@ -98,16 +96,18 @@ async def send_otp_email(email_to: str, otp: str) -> bool:
                 margin-bottom: 30px;
                 display: inline-block;
                 width: 80%;
+                border: 1px solid #333333;
             }}
             .footer {{
-                font-size: 12px;
-                color: #666666;
+                font-size: 13px;
+                color: #aaaaaa;
                 margin-top: 20px;
+                line-height: 1.5;
             }}
             .branding {{
-                margin-top: 10px;
+                margin-top: 15px;
                 font-weight: 600;
-                color: #888888;
+                color: #cccccc;
             }}
         </style>
     </head>
@@ -116,7 +116,7 @@ async def send_otp_email(email_to: str, otp: str) -> bool:
             <div class="title">NexChat Verification</div>
             
             <div class="instruction">
-                Use the following code to sign in to your account. Valid for 5 minutes.
+                Use the following code to sign in to your account. Valid for {expiry_mins} minutes.
             </div>
             
             <div class="otp-box">
@@ -131,7 +131,7 @@ async def send_otp_email(email_to: str, otp: str) -> bool:
                 NexChat by CodeCloudX
             </div>
             
-            <div style="font-size: 10px; color: #444; margin-top: 20px;">
+            <div style="font-size: 11px; color: #777777; margin-top: 25px;">
                 &copy; 2026 NexChat. All rights reserved.
             </div>
         </div>
@@ -139,6 +139,4 @@ async def send_otp_email(email_to: str, otp: str) -> bool:
     </html>
     """
     
-    text_content = f"Your NexChat verification code is: {otp}. It expires in 5 minutes. NexChat by CodeCloudX"
-
-    return await send_email(email_to, subject, html_content, text_content)
+    return await send_email(email_to, subject, html_content)

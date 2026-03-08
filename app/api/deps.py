@@ -1,57 +1,44 @@
-from typing import Generator
-from fastapi import Depends
-from fastapi.security import APIKeyHeader
-from jose import jwt, JWTError
+from typing import Generator, Optional
+from fastapi import Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core import security
 from app.core.exceptions import (
     UnauthorizedException, 
-    ForbiddenException, 
     UserNotFoundException,
     InactiveUserException
 )
 from app.models.user import User
 from app.repositories import user_repo
 from app.infrastructure.database import async_session_maker
-
-# Standard Bearer token header instead of OAuth2PasswordBearer
-reusable_oauth2 = APIKeyHeader(name="Authorization", auto_error=False)
+from app.core import security
 
 async def get_db() -> Generator:
-    """
-    Dependency that provides an async database session per request.
-    """
     async with async_session_maker() as session:
         yield session
 
 async def get_current_user(
+    request: Request,
     db: AsyncSession = Depends(get_db),
-    token: str = Depends(reusable_oauth2)
+    authorization: Optional[str] = Header(None),
+    device_id: Optional[str] = Header(None, alias="Device-Id")
 ) -> User:
     """
-    Dependency that validates JWT and returns the current user.
-    Standardized to use custom exceptions.
+    Dependency that validates Session ID and returns the current user.
+    Uses multi-layer security: Session ID, Device ID, and IP address.
     """
-    if not token:
-        raise UnauthorizedException(detail="Not authenticated")
+    if not authorization or not authorization.startswith("Session "):
+        raise UnauthorizedException(detail="Not authenticated. Session required.")
     
-    # Handle 'Bearer <token>' format
-    if token.startswith("Bearer "):
-        token = token.split(" ")[1]
+    if not device_id:
+        raise UnauthorizedException(detail="Device-Id header required.")
 
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise UnauthorizedException(detail="Invalid token payload")
-    except JWTError:
-        raise UnauthorizedException(detail="Could not validate credentials")
+    session_id = authorization.replace("Session ", "")
+    client_ip = request.client.host
     
-    user = await user_repo.get_user_by_id(db, user_id=user_id)
+    # CORE SECURITY VALIDATION (Multi-layer)
+    user_session = await security.validate_session_request(db, session_id, device_id, client_ip)
+    
+    user = await user_repo.get_user_by_id(db, user_id=user_session.user_id)
     if not user:
         raise UserNotFoundException()
     

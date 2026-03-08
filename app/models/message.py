@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime, Text, Enum, Integer
+from sqlalchemy import Column, String, ForeignKey, DateTime, Text, Enum, Integer, Index
 from sqlalchemy.sql import func
 from app.models.base import Base, MessageType
 
@@ -16,5 +16,10 @@ class Message(Base):
     media_height = Column(Integer, nullable=True)
     
     type = Column(Enum(MessageType), default=MessageType.TEXT)
-    created_at = Column(DateTime(timezone=True), default=func.now(), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=func.now(), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), default=func.now(), server_default=func.now(), onupdate=func.now())
+
+    # Combined index for fetching latest messages in a specific chat
+    __table_args__ = (
+        Index('idx_chat_created_at', 'chat_id', created_at.desc()),
+    )

@@ -1,47 +1,43 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
-from jose import jwt, JWTError
-
-from app.core import security
-from app.core.config import settings
-from app.websocket.manager import manager
-from app.websocket import events
 from app.infrastructure.database import async_session_maker
 from app.repositories import user_repo
+from app.websocket.manager import manager
+from app.websocket import events
+from app.core import security
 
 websocket_router = APIRouter()
 
-async def get_ws_user(token: str):
+async def get_ws_user(session_id: str, device_id: str, ip_address: str):
     """
-    Authenticated a WS user using the same logic as HTTP deps.
+    Validates session for WebSocket connection using centralized security logic.
     """
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
-        user_id: str = payload.get("sub")
-        if not user_id:
-            return None
+    async with async_session_maker() as db:
+        try:
+            # Centralized Trust: Pass IP address for multi-layer validation
+            session = await security.validate_session_request(db, session_id, device_id, ip_address)
             
-        async with async_session_maker() as db:
-            user = await user_repo.get_user_by_id(db, user_id=user_id)
+            user = await user_repo.get_user_by_id(db, user_id=session.user_id)
             if not user or not user.is_active:
                 return None
             return user
-    except (JWTError, Exception):
-        return None
+        except Exception:
+            return None
 
 
 @websocket_router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    token: str = Query(...),
+    session_id: str = Query(...),
+    device_id: str = Query(...)
 ):
-    user = await get_ws_user(token)
+    # Extract IP address from WebSocket scope
+    client_ip = websocket.client.host
+    
+    user = await get_ws_user(session_id, device_id, client_ip)
     if not user:
         await websocket.close(code=1008) # Policy Violation
         return
 
-    # ConnectionManager handles online status via presence_service
     await manager.connect(websocket, user.id)
 
     try:

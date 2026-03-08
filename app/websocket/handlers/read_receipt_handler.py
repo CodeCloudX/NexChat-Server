@@ -31,15 +31,16 @@ async def handle_read_receipt(user_id: str, data: Dict[str, Any]):
         if payload.status == "delivered":
             if not db_obj:
                 await read_repo.create_delivery_receipt(db, message_id=payload.message_id, user_id=user_id)
-            else: return 
+            else: 
+                return 
         
         elif payload.status == "read":
             await read_repo.mark_as_read(db, db_obj=db_obj, message_id=payload.message_id, user_id=user_id)
 
-        # 3. Broadcast using standardized schema dump
+        # 3. Broadcast using standardized schema dump and correct constant
         members = await chat_service.get_chat_members(db, chat_id=payload.chat_id)
         broadcast_data = {
-            "type": constants.EVENT_STATUS_UPDATE,
+            "type": constants.EVENT_STATUS_UPDATE, # Corrected: "message_status_update"
             "payload": payload.model_dump()
         }
         await manager.broadcast(broadcast_data, members)
